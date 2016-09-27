@@ -1,6 +1,16 @@
 <?php
 
 	require("../../config.php");
+	require("functions.php");
+	
+	
+	//kui on see siis suunan data lehele
+	if(isset($_SESSION["userId"])){
+		
+		//suunan sisselogimise lehele
+		header("Location: data.php");
+		
+	}
 	
 	
 	//get ja post muutujad
@@ -12,9 +22,13 @@
 	$signupPasswordError= "";
 	$reenterpasswordError= "";
 	
+	$signinEmailError= "";
+	$signinPasswordError= "";
+	$signinemail= "";
 	
 	$signupemail = "";
 	$signupGender = "";
+	$signupGenderError = "";
 	
 	if(isset($_POST["signupemail"])){
 		
@@ -27,6 +41,17 @@
 			$signupemail = $_POST["signupemail"];
 			
 		}
+		
+		if(isset($_POST["signupGender"])) {
+			
+			$signupGender = $_POST["signupGender"];
+			
+		} else {
+			
+			$signupGenderError= "See valik on kohustuslik";
+			
+		}
+		
 	}
 	
 	if(isset($_POST["signuppassword"])){
@@ -86,31 +111,41 @@
 		
 		//echo $serverUsername;
 		
-		$database = "if16_georg";
-		$mysqli = new mysqli($serverHost, $serverUsername, $serverPassword, $database);
-		
-		$stmt = $mysqli->prepare("INSERT INTO user_sample(email, password) VALUES(?, ?)");
-		
-		echo $mysqli->error;
-		
-		$stmt->bind_param("ss", $signupemail, $password);
-		
-		if($stmt->execute()) {
-			
-			echo "salvestamine onnestus";
-			
-		} else {
-			
-			echo "ERROR".$stmt->error;
-		}
-		
-		$stmt->close();
-		$mysqli->close();
+		signUp($signupemail, $password);
 		
 	}
 	
+	$error="";
+	if(isset($_POST["loginemail"]) && isset($_POST["loginpassword"]) &&
+		!empty($_POST["loginemail"]) && !empty($_POST["loginpassword"])
+		) {
+		
+		$error = login ($_POST["loginemail"], $_POST["loginpassword"]);
+		
+		
+	}
 	
+	if(isset($_POST["loginemail"])){
+		
+		if(empty($_POST["loginemail"])){
+			
+			$signinEmailError= "See vali on kohustuslik";
+			
+		}else{
+			
+			$signinemail = $_POST["loginemail"];
+			
+		}
+	}
 	
+	if(isset($_POST["loginpassword"])){
+		
+		if(empty($_POST["loginpassword"])){
+			
+			$signinPasswordError= "See vali on kohustuslik";
+			
+		}
+	}
 	
 	
 	
@@ -125,11 +160,11 @@
 
 	<h1>Logi sisse</h1>
 	<form method="POST">
-	
-		<input name="loginemail" placeholder="Kasutaja" type="text">
+		<p style="color:red;"><?=$error;?></p>
+		<input name="loginemail" placeholder="Kasutaja" type="text" value="<?=$signinemail;?>"> <?php echo $signinEmailError; ?>
 		<br><br>
 	
-		<input name="loginpassword" placeholder="Parool" type="password">
+		<input name="loginpassword" placeholder="Parool" type="password"> <?php echo $signinPasswordError; ?>
 		<br><br>
 			
 	
@@ -154,7 +189,7 @@
 		<input name="reenterpassword" placeholder="********" type="password"> <?php echo $reenterpasswordError; ?>
 		<br><br>
 		
-		<b><label>*Sugu:</label></b><br><br>
+		<b><label>*Sugu:</label></b><?php echo $signupGenderError; ?><br><br>
 		<?php if($signupGender == "male") { ?>
 			<input name="signupGender" type="radio" value="male" checked> Male<br>
 		<?php }else { ?>
@@ -176,7 +211,7 @@
 		<br>
 		
 		<b><label>*Sunnikuupaev:</label></b><br>
-		<input name="bday" type="date" max="2016-01-01" min="1900-01-01">
+		<input name="bday" type="date" value="2015-12-12" max="2016-01-01" min="1900-01-01">
 		<br><br>
 		
 		<b><label>Riik:</label></b><br>
